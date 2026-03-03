@@ -15,9 +15,9 @@ const DashboardPage = () => {
     const id = `board-${Date.now()}`;
     addBoard({
       id,
-      title: `New Board ${Object.keys(boards).length + 1}`,
+      title: `Board ${Object.keys(boards).length + 1}`,
       description: 'Automatically created board',
-      createdDate: new Date().toISOString(),
+      createdDate: new Date().toLocaleDateString(),
       columnIds: [],
     });
   };
@@ -64,6 +64,7 @@ const DashboardPage = () => {
               {board.title}
             </Link>
             <p className="text-gray-300 mt-1">{board.description}</p>
+              Created: {board.createdDate}
             <button
               onClick={() => openDeleteModal(board.id)}
               className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded mt-2"
