@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useStore } from '../state/store';
 import type { Column } from '../types/column';
+import type { Card } from '../types/card'
 
 import CreateColumnModal from '../components/CreateColumnModal';
 import EditColumnModal from '../components/EditColumnModal';
 import ConfirmModal from '../components/ConfrimModal';
+import CreateCardModal from '../components/CreateCardModal';
+import EditCardModal from "../components/EditCardModal"
+import {parseMarkdown} from '../utils/markdown'
 
 const BoardPage = () => {
   const { boardId } = useParams<{ boardId: string }>();
@@ -19,6 +23,18 @@ const BoardPage = () => {
   const addColumn = useStore((state) => state.addColumn);
   const deleteColumn = useStore((state) => state.deleteColumn);
   const editColumn = useStore((state) => state.editColumn);
+  const addCard = useStore((state) => state.addCard)
+  const deleteCard = useStore((state) => state.deleteCard)
+  const editCard = useStore((state) => state.editCard)
+
+  const [cardToDelete, setCardToDelete] = useState<string | null>(null)
+  const [cardColumnId, setCardColumnId] = useState<string | null>(null)
+
+  const [cardToEdit, setCardToEdit] = useState<Card | null>(null)
+  const [editCardModalOpen, setEditCardModalOpen] = useState(false)
+
+  const [cardModalOpen, setCardModalOpen] = useState(false)
+  const [targetColumnId, setTargetColumnId] = useState<string | null>(null)
 
   const [modalOpen, setModalOpen] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null);
@@ -65,11 +81,11 @@ const BoardPage = () => {
     setModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (columnToDelete) deleteColumn(columnToDelete, board.id);
-    setModalOpen(false);
-    setColumnToDelete(null);
-  };
+  // const confirmDelete = () => {
+  //   if (columnToDelete) deleteColumn(columnToDelete, board.id);
+  //   setModalOpen(false);
+  //   setColumnToDelete(null);
+  // };
 
   const cancelDelete = () => {
     setModalOpen(false);
@@ -97,6 +113,84 @@ const BoardPage = () => {
     setEditModalOpen(false);
     setColumnToEdit(null);
   };
+
+  const openCardModal = (columnId: string) => {
+    setTargetColumnId(columnId)
+    setCardModalOpen(true)
+  }
+
+  const handleCreateCard = (
+    title: string,
+    description: string,
+    tags: string[],
+    dueDate?: string
+  ) => {
+
+    if (!targetColumnId) return
+
+    const newCard = {
+      id: `card-${Date.now()}`,
+      title,
+      description,
+      tags,
+      dueDate: dueDate ?? null,
+      createdDate: new Date().toLocaleDateString(),
+    }
+
+    addCard(newCard, targetColumnId)
+
+    setCardModalOpen(false)
+    setTargetColumnId(null)
+  }
+
+  const openDeleteCardModal = (cardId: string, columnId: string) => {
+    setCardToDelete(cardId)
+    setCardColumnId(columnId)
+    setModalOpen(true)
+  }
+
+  const confirmEditDelete = () => {
+    if (cardToDelete && cardColumnId) {
+      deleteCard(cardToDelete, cardColumnId)
+      setCardToDelete(null)
+      setCardColumnId(null)
+    }
+
+    else if (columnToDelete) {
+      deleteColumn(columnToDelete, board.id)
+      setColumnToDelete(null)
+    }
+
+    setModalOpen(false)
+  }
+
+  const openEditCardModal = (card: Card) => {
+    setCardToEdit(card)
+    setEditCardModalOpen(true)
+  }
+
+  const handleEditCardConfirm = (
+    title: string,
+    description: string,
+    tags: string[],
+    dueDate?: string
+  ) => {
+
+    if (!cardToEdit) return
+
+    const updatedCard = {
+      ...cardToEdit,
+      title,
+      description,
+      tags,
+      dueDate: dueDate ?? null
+    }
+
+    editCard(updatedCard)
+
+    setEditCardModalOpen(false)
+    setCardToEdit(null)
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white py-12 px-6">
@@ -151,13 +245,13 @@ const BoardPage = () => {
               >
                 {/* Column Title */}
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-lg capitalize">{column.title}</h3>
-                    <button
-                        onClick={() => openEditModal(column)}
-                        className="text-blue-400 hover:text-blue-300 text-sm cursor-pointer"
-                    >
-                        Edit
-                    </button>
+                  <h3 className="font-bold text-lg capitalize">{column.title}</h3>
+                  <button
+                      onClick={() => openEditModal(column)}
+                      className="text-blue-400 hover:text-blue-300 text-sm cursor-pointer"
+                  >
+                      Edit
+                  </button>
                 </div>
 
                 {/* Cards */}
@@ -169,24 +263,67 @@ const BoardPage = () => {
                     return (
                       <div
                         key={card.id}
-                        className="bg-gray-700 p-3 rounded"
+                        className="bg-gray-700 p-3 rounded shadow"
                       >
-                        <h4 className="font-semibold capitalize">
-                          {card.title}
-                        </h4>
-                        <p className="text-sm text-gray-300 capitalize">
-                          {card.description}
-                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-semibold capitalize">
+                            {card.title}
+                          </h4>
+                          <button
+                            onClick={() => openEditCardModal(card)}
+                            className="text-blue-400 hover:text-blue-300 text-sm cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                        <div
+                          className="text-sm text-gray-300 capitalize"
+                          dangerouslySetInnerHTML={{
+                            __html: parseMarkdown(card.description)
+                          }}
+                        />
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {card.tags.map(tag => (
+                            <span
+                              key={tag}
+                              className="bg-blue-600 text-xs px-2 py-1 rounded capitalize"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        {card.dueDate && (
+                          <p className="text-xs text-yellow-400 mt-2 py-2">
+                            Due Date: {card.dueDate}
+                          </p>
+                        )}
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() => openDeleteCardModal(card.id, column.id)}
+                            className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-                <button
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => openCardModal(column.id)}
+                    className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm cursor-pointer"
+                  >
+                    Add Card
+                  </button>
+
+                  <button
                     onClick={() => openDeleteModal(column.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded mt-2 cursor-pointer"
-                >
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm cursor-pointer"
+                  >
                     Delete Column
-                </button>
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -199,8 +336,8 @@ const BoardPage = () => {
       />
       <ConfirmModal
         isOpen={modalOpen}
-        message={`Are you sure you want to delete this column?`}
-        onConfirm={confirmDelete}
+        message={`Are you sure you want to delete this item?`}
+        onConfirm={confirmEditDelete}
         onCancel={cancelDelete}
       />
       <EditColumnModal
@@ -209,6 +346,19 @@ const BoardPage = () => {
         onConfirm={handleEditConfirm}
         onCancel={handleEditCancel}
       />
+      <CreateCardModal
+        isOpen={cardModalOpen}
+        onConfirm={handleCreateCard}
+        onCancel={() => setCardModalOpen(false)}
+      />
+      {editCardModalOpen && cardToEdit && (
+        <EditCardModal
+          isOpen={editCardModalOpen}
+          card={cardToEdit}
+          onConfirm={handleEditCardConfirm}
+          onCancel={() => setEditCardModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
