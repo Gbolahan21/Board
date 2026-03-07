@@ -24,7 +24,7 @@ const CreateCardModal = ({ isOpen, onConfirm, onCancel }: Props) => {
       setTags("")
       setDueDate("")
     }
-  }, [isOpen])
+  }, [isOpen]) // eslint-disable-next-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null
 
