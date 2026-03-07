@@ -56,11 +56,11 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      <ul className="space-y-6 max-w-xl mx-auto">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
         {Object.values(boards).map((board) => (
           <li
             key={board.id}
-            className="bg-gray-800 p-4 rounded-lg shadow flex flex-col items-start w-full"
+            className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition"
           >
             <Link
               to={`/board/${board.id}`}

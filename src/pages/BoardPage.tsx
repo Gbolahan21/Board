@@ -77,20 +77,22 @@ const BoardPage = () => {
 
     
   const openDeleteModal = (columnId: string) => {
-    setColumnToDelete(columnId);
-    setModalOpen(true);
-  };
+    setColumnToDelete(columnId)
 
-  // const confirmDelete = () => {
-  //   if (columnToDelete) deleteColumn(columnToDelete, board.id);
-  //   setModalOpen(false);
-  //   setColumnToDelete(null);
-  // };
+    // clear card delete states
+    setCardToDelete(null)
+    setCardColumnId(null)
+
+    setModalOpen(true)
+  }
 
   const cancelDelete = () => {
-    setModalOpen(false);
-    setColumnToDelete(null);
-  };
+    setModalOpen(false)
+
+    setColumnToDelete(null)
+    setCardToDelete(null)
+    setCardColumnId(null)
+  }
 
   const openEditModal = (column: Column) => {
     setColumnToEdit(column);
@@ -226,7 +228,7 @@ const BoardPage = () => {
         </button>
 
         {/* Columns Row */}
-        <div className="flex gap-6 overflow-x-auto py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto py-6">
 
           {board.columnIds.length === 0 && (
             <div className="text-gray-400">
@@ -241,7 +243,7 @@ const BoardPage = () => {
             return (
               <div
                 key={column.id}
-                className="bg-gray-800 p-4 rounded-lg w-72 flex-shrink-0"
+                className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition"
               >
                 {/* Column Title */}
                 <div className="flex justify-between items-center mb-4">
@@ -263,7 +265,7 @@ const BoardPage = () => {
                     return (
                       <div
                         key={card.id}
-                        className="bg-gray-700 p-3 rounded shadow"
+                        className="bg-gray-500 p-3 rounded shadow"
                       >
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-semibold capitalize">
@@ -302,7 +304,7 @@ const BoardPage = () => {
                             onClick={() => openDeleteCardModal(card.id, column.id)}
                             className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs cursor-pointer"
                           >
-                            Delete
+                            Delete Card
                           </button>
                         </div>
                       </div>
@@ -336,7 +338,9 @@ const BoardPage = () => {
       />
       <ConfirmModal
         isOpen={modalOpen}
-        message={`Are you sure you want to delete this item?`}
+        message={`Are you sure you want to delete this ${
+          columnToDelete ? 'Column' : 'Card'
+        }?`}
         onConfirm={confirmEditDelete}
         onCancel={cancelDelete}
       />

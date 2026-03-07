@@ -77,7 +77,7 @@ const EditCardModal = ({ isOpen, card, onConfirm, onCancel }: Props) => {
 
           <button
             onClick={onCancel}
-            className="px-3 py-1 bg-gray-600 rounded"
+            className="px-3 py-1 bg-gray-600 rounded cursor-pointer"
           >
             Cancel
           </button>
@@ -91,7 +91,7 @@ const EditCardModal = ({ isOpen, card, onConfirm, onCancel }: Props) => {
                 dueDate || undefined
               )
             }
-            className="px-3 py-1 bg-green-600 rounded"
+            className="px-3 py-1 bg-green-600 rounded cursor-pointer"
           >
             Save
           </button>
